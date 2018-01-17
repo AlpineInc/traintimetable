@@ -39,7 +39,11 @@ $(function() {
         };
 
         database.ref("/trainRecord").push(trainRecord);
-
+        
+        $("#input-trainName").val("");
+        $("#input-trainDestination").val("");
+        $("#input-trainStartTime").val("");
+        $("#input-trainFrequency").val("");
     });
 
     database.ref("/trainRecord").on("child_added", function(childSapshot) {
@@ -59,7 +63,7 @@ $(function() {
     function refreshTimeTable() {
 
         var table = $("#table-trainTable");
-                    console.log("hello1");
+        console.log("hello1");
 
         $("#table-trainTable > tbody > tr").each(function() {
             console.log("hello2");
