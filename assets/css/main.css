@@ -1,0 +1,25 @@
+#btn-giphyBtn{
+	margin: 5px;
+}
+
+#div-addButton{
+	margin-top: 5px;
+}
+
+.card {
+	margin: 5px;
+    height: 200px;
+    width: 200px;
+    float: left;
+}
+
+.card-body {
+    height: 40px;
+    width: 200px;
+}
+
+.card-img-bottom {
+    height: 140px;
+    width: 200px;
+}
+
