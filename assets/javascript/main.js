@@ -10,23 +10,48 @@ $(function() {
     firebase.initializeApp(config);
     var database = firebase.database();
 
+
     function getNextTrainTime(trainStartTime, trainFrequency) {
-        // Difference between current time and train start times
         var diffTime = moment().diff(moment(trainStartTime), "minutes");
-
-        // Time modulus 
-        var diffTimeModulus = diffTime % trainFrequency;
-
-        // Time for the next train
-        var minutesTillTrain = trainFrequency - diffTimeModulus;
-
-        // Next Train
+        var diffTimeModulus = diffTime % parseInt(trainFrequency);
+        var minutesTillTrain = parseInt(trainFrequency) - diffTimeModulus;
         var nextTrainTime = moment().add(minutesTillTrain, "minutes").format("hh:mm");
         return {
             "nextTrainTime": nextTrainTime,
             "minutesTillTrain": minutesTillTrain
         };
     };
+
+
+
+    function refreshTimeTable() {
+        var table = $("#table-trainTable");
+
+        $("#table-trainTable > tbody > tr").each(function() {
+            var trainStartTime = moment($("#td-trainStartTime", this).text(),"hh:mm");
+            var trainFrequency = $("#td-trainFrequency", this).text();
+            var nextTrain = getNextTrainTime(trainStartTime, trainFrequency);
+            $("#td-nextTrainTime", this).text(nextTrain.nextTrainTime);
+            $("#td-minsUntil", this).text(nextTrain.minutesTillTrain);
+
+        });
+    };
+
+
+
+    database.ref("/trainRecord").on("child_added", function(childSapshot) {
+        var trainStartTime = moment(childSapshot.val().trainStartTime, "hh:mm");
+        var trainFrequency = childSapshot.val().trainFrequency;
+
+        var nextTrain = getNextTrainTime(trainStartTime, trainFrequency);
+
+        $("#table-trainTable > tbody").append("<tr><td style='display:none' id='td-trainStartTime'>" + childSapshot.val().trainStartTime + "</td><td>" + childSapshot.val().trainName + "</td><td>" + childSapshot.val().trainDestination + "</td><td id='td-trainFrequency'>" + childSapshot.val().trainFrequency + "</td><td id='td-nextTrainTime'>" + nextTrain.nextTrainTime + "</td><td id='td-minsUntil'>" + nextTrain.minutesTillTrain + "</td></tr>");
+
+    }, function(errorObject) {
+        console.log("Database read failed: " + errorObject.code);
+    });
+
+
 
     $(document).on("click", "#btn-addNewTrain", function(event) {
         event.preventDefault();
@@ -39,44 +64,14 @@ $(function() {
         };
 
         database.ref("/trainRecord").push(trainRecord);
-        
+
         $("#input-trainName").val("");
         $("#input-trainDestination").val("");
         $("#input-trainStartTime").val("");
         $("#input-trainFrequency").val("");
     });
 
-    database.ref("/trainRecord").on("child_added", function(childSapshot) {
-        var trainStartTime = moment(childSapshot.val().trainStartTime, "hh:mm");
-        var trainFrequency = childSapshot.val().trainFrequency;
 
-        var nextTrain = getNextTrainTime(trainStartTime, trainFrequency);
-
-        $("#table-trainTable > tbody").append("<tr><td>" + childSapshot.val().trainName + "</td><td>" + childSapshot.val().trainDestination + "</td><td>" + childSapshot.val().trainFrequency + "</td><td>" + nextTrain.nextTrainTime + "</td><td>" + nextTrain.minutesTillTrain + "</td></tr>");
-
-    }, function(errorObject) {
-        console.log("Database read failed: " + errorObject.code);
-    });
-
-    //setTimeout(refreshTimeTable, 1000);
-
-    function refreshTimeTable() {
-
-        var table = $("#table-trainTable");
-        console.log("hello1");
-
-        $("#table-trainTable > tbody > tr").each(function() {
-            console.log("hello2");
-            console.log(this);
-            $(this > td).each(function() {
-                console.log(this.html());
-            })
-        });
-        //var nextTrain = getNextTrainTime(trainStartTime, trainFrequency);
-
-        //$("#table-trainTable > tbody").append("<tr><td>" + childSapshot.val().trainName + "</td><td>" + childSapshot.val().trainDestination + "</td><td>" + childSapshot.val().trainFrequency + "</td><td>" + nextTrain.nextTrainTime + "</td><td>" + nextTrain.minutesTillTrain + "</td></tr>");
-
-    };
-    refreshTimeTable();
+    setInterval(refreshTimeTable, 60000);
 
 });
